@@ -40,8 +40,10 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
+          git checkout master
+          git pull origin master
           git add com.yPhil.Emulsion.json
           git commit -m "Update manifest for $TAG"
-          git push
+          git push origin master
         env:
           GITHUB_TOKEN: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
