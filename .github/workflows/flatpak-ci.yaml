@@ -45,7 +45,7 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
 
           # IMPORTANT: override the remote to inject PAT
-          git remote set-url origin https://x-access-token:$PAT@github.com/yPhil-gh/com.yPhil.Emulsion.git
+          git remote set-url origin https://x-access-token:${{ secrets.FLATHUB_MANIFEST_TOKEN }}@github.com/yPhil-gh/com.yPhil.Emulsion.git
 
           git add com.yPhil.Emulsion.json
           git commit -m "Update manifest for $TAG" || echo "No changes to commit"
