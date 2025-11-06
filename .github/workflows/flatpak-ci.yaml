@@ -3,54 +3,50 @@ name: Update Flatpak Manifest
 on:
   push:
     tags:
-      - '*'  # trigger on any tag push
+      - '*'   # trigger on any tag push
 
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
+
     steps:
-      # 1. Checkout the repo fully
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # needed to push back
-          ref: master      # make sure we are on master
+          fetch-depth: 0   # needed so we can push back to master
+          ref: master
 
-      # 2. Set release variables
       - name: Set variables
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           echo "TAG=$TAG" >> $GITHUB_ENV
-          RELEASE_URL="https://github.com/yPhil-gh/Emulsion/releases/download/$TAG/emulsion_x86_64.AppImage"
-          echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
+          echo "RELEASE_URL=https://github.com/yPhil-gh/Emulsion/releases/download/$TAG/emulsion_x86_64.AppImage" >> $GITHUB_ENV
 
-      # 3. Download AppImage
       - name: Download AppImage
         run: curl -L -o emulsion.AppImage "$RELEASE_URL"
 
-      # 4. Compute SHA256
       - name: Compute SHA256
         run: |
           SHA256=$(sha256sum emulsion.AppImage | awk '{print $1}')
           echo "SHA256=$SHA256" >> $GITHUB_ENV
 
-      # 5. Update manifest JSON
-      - name: Update manifest
+      - name: Update manifest JSON
         run: |
           jq --arg url "$RELEASE_URL" --arg sha "$SHA256" \
             '.modules[0].sources[0].url = $url | .modules[0].sources[0].sha256 = $sha' \
             com.yPhil.Emulsion.json > tmp.json
           mv tmp.json com.yPhil.Emulsion.json
 
-      # 6. Commit & push changes using PAT
-      - name: Commit & Push
+      - name: Configure git and push updated manifest
+        env:
+          PAT: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
         run: |
-          git config user.name "yPhil"
-          git config user.email "you@example.com"
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
 
-          # ABSOLUTELY CRITICAL: reset origin BEFORE ANYTHING ELSE
-          git remote set-url origin https://${{ secrets.FLATHUB_MANIFEST_TOKEN }}@github.com/yPhil-gh/com.yPhil.Emulsion.git
+          # override the remote to use PAT
+          git remote set-url origin https://x-access-token:$PAT@github.com/yPhil-gh/com.yPhil.Emulsion.git
 
           git add com.yPhil.Emulsion.json
-          git commit -m "Update manifest for $TAG" || echo "No changes"
-          git push origin HEAD:master
+          git commit -m "Update manifest for $TAG" || echo "No changes to commit"
+          git push origin master
