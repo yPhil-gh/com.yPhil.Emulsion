@@ -22,7 +22,7 @@ jobs:
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "RELEASE_URL=https://github.com/yPhil-gh/Emulsion/releases/download/$TAG/emulsion_x86_64.AppImage" >> $GITHUB_ENV
+          echo "RELEASE_URL=https://github.com/yPhil-gh/Emulsion/releases/download/v$TAG/emulsion_x86_64.AppImage" >> $GITHUB_ENV
 
       - name: Download AppImage
         run: curl -L -o emulsion.AppImage "$RELEASE_URL"
