@@ -1,18 +1,49 @@
-name: Update Flatpak
+name: Update Flatpak Manifest
 
 on:
   push:
     tags:
-      - '*'  # trigger on any tag
+      - '*'   # trigger on any tag
 
 jobs:
-  build-flatpak:
+  update-manifest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Build Flatpak bundle
-        uses: flatpak/flatpak-github-actions@v1
+      - name: Checkout repo
+        uses: actions/checkout@v3
         with:
-          manifest-path: com.yPhil.Emulsion.json
-          bundle: true
+          token: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
+
+      - name: Set variables
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          RELEASE_URL="https://github.com/yPhil-gh/Emulsion/releases/download/$TAG/emulsion_x86_64.AppImage"
+          echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
+
+      - name: Download AppImage
+        run: |
+          curl -L -o emulsion.AppImage $RELEASE_URL
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          SHA256=$(sha256sum emulsion.AppImage | awk '{print $1}')
+          echo "SHA256=$SHA256" >> $GITHUB_ENV
+
+      - name: Update manifest
+        run: |
+          jq --arg url "$RELEASE_URL" --arg sha "$SHA256" \
+            '.modules[0].sources[0].url = $url | .modules[0].sources[0].sha256 = $sha' \
+            com.yPhil.Emulsion.json > tmp.json
+          mv tmp.json com.yPhil.Emulsion.json
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add com.yPhil.Emulsion.json
+          git commit -m "Update manifest for $TAG"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
