@@ -44,12 +44,13 @@ jobs:
 
       # 6. Commit & push changes using PAT
       - name: Commit & Push
-        env:
-          PAT: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${PAT}@github.com/yPhil-gh/com.yPhil.Emulsion.git
+          git config user.name "yPhil"
+          git config user.email "you@example.com"
+
+          # ABSOLUTELY CRITICAL: reset origin BEFORE ANYTHING ELSE
+          git remote set-url origin https://${{ secrets.FLATHUB_MANIFEST_TOKEN }}@github.com/yPhil-gh/com.yPhil.Emulsion.git
+
           git add com.yPhil.Emulsion.json
-          git commit -m "Update manifest for $TAG" || echo "No changes to commit"
-          git push origin master
+          git commit -m "Update manifest for $TAG" || echo "No changes"
+          git push origin HEAD:master
