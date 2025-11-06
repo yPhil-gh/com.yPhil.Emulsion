@@ -1,17 +1,18 @@
-name: Flatpak Build CI
+name: Update Flatpak
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]  # Triggered when a new release is published in Emulsion repo
 
 jobs:
-  build:
+  build-flatpak:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Flatpak Builder
-        run: sudo apt install flatpak-builder
-      - name: Build Flatpak
-        run: flatpak-builder --force-clean build-dir com.yPhil.Emulsion.json
+      - name: Checkout manifest repo
+        uses: actions/checkout@v3
+
+      - name: Update Flatpak manifest
+        uses: flatpak/flatpak-github-actions@v1
+        with:
+          manifest: com.yPhil.Emulsion.json
+          github-token: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
