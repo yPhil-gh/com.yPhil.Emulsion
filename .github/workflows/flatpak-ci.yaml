@@ -3,22 +3,22 @@ name: Update Flatpak Manifest
 on:
   push:
     tags:
-      - '*'   # trigger on any tag push
+      - '*'   # run on every tag
 
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout master
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # needed so we can checkout master
+          fetch-depth: 0
           ref: master
 
-      - name: Set variables
+      - name: Extract tag and build URLs
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
+          TAG="${GITHUB_REF#refs/tags/}"
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "RELEASE_URL=https://github.com/yPhil-gh/Emulsion/releases/download/$TAG/emulsion_x86_64.AppImage" >> $GITHUB_ENV
 
@@ -37,16 +37,21 @@ jobs:
             com.yPhil.Emulsion.json > tmp.json
           mv tmp.json com.yPhil.Emulsion.json
 
-      - name: Configure git with PAT and push
+      - name: Commit and push only if changed
         env:
           PAT: ${{ secrets.FLATHUB_MANIFEST_TOKEN }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
 
-          # IMPORTANT: override the remote to inject PAT
-          git remote set-url origin https://x-access-token:${{ secrets.FLATHUB_MANIFEST_TOKEN }}@github.com/yPhil-gh/com.yPhil.Emulsion.git
+          git remote set-url origin https://x-access-token:${PAT}@github.com/yPhil-gh/com.yPhil.Emulsion.git
 
           git add com.yPhil.Emulsion.json
-          git commit -m "Update manifest for $TAG" || echo "No changes to commit"
-          git push origin master
+
+          if git diff --cached --quiet; then
+            echo "Manifest already up-to-date. Nothing to commit."
+          else
+            git commit -m "Update manifest for $TAG"
+            git push origin master
+            echo "Manifest updated and pushed."
+          fi
