@@ -11,8 +11,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://github.com/yPhil-gh/Emulsion/releases/download/${VERSION}/emulsion_x86_64.AppImage",
-          "sha256": "AUTO"
+          "url": "https://github.com/yPhil-gh/Emulsion/releases/download/0.9.9/emulsion_x86_64.AppImage",
+          "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
         }
       ]
     }
