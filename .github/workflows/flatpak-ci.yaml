@@ -1,15 +1,15 @@
 name: Update Flatpak
 
 on:
-  release:
-    types: [published]  # Triggered when a new release is published in Emulsion repo
+  push:
+    tags:
+      - '*'   # triggers on any tag
 
 jobs:
   build-flatpak:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout manifest repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Update Flatpak manifest
         uses: flatpak/flatpak-github-actions@v1
