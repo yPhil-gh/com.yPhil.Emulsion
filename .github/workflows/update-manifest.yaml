@@ -1,0 +1,31 @@
+name: Update Manifest SHA
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [new_release]
+
+jobs:
+  update-sha:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout manifest repo
+        uses: actions/checkout@v3
+
+      - name: Fetch latest release tarball
+        run: |
+          TAG=${{ github.event.client_payload.tag }}
+          URL="https://github.com/yPhil-gh/Emulsion/releases/download/$TAG/emulsion-linux-unpacked.tar.gz"
+          curl -L $URL -o emulsion-linux-unpacked.tar.gz
+          SHA=$(sha256sum emulsion-linux-unpacked.tar.gz | awk '{print $1}')
+          # Replace SHA in manifest
+          sed -i "s/<AUTO-FILLED-BY-WORKFLOW>/$SHA/" com.yPhil.Emulsion.json
+          sed -i "s/<TAG>/$TAG/" com.yPhil.Emulsion.json
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add com.yPhil.Emulsion.json
+          git commit -m "Update manifest for $TAG"
+          git push

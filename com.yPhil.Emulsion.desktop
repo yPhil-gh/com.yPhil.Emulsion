@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Emulsion
+Comment=Your game library manager
+Exec=emulsion
+Icon=com.yPhil.Emulsion
+Terminal=false
+Type=Application
+Categories=Utility;

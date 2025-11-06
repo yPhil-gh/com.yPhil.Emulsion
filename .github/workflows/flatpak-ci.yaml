@@ -1,0 +1,17 @@
+name: Flatpak Build CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Flatpak Builder
+        run: sudo apt install flatpak-builder
+      - name: Build Flatpak
+        run: flatpak-builder --force-clean build-dir com.yPhil.Emulsion.json
