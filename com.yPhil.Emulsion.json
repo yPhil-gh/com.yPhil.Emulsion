@@ -1,18 +1,55 @@
 {
   "app-id": "com.yPhil.Emulsion",
   "runtime": "org.freedesktop.Platform",
-  "runtime-version": "22.08",
+  "runtime-version": "24.08",
   "sdk": "org.freedesktop.Sdk",
   "command": "emulsion",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--filesystem=home"
+  ],
   "modules": [
     {
-      "name": "emulsion",
+      "name": "nodejs",
       "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm755 node /app/bin/node",
+        "install -Dm755 npm  /app/bin/npm"
+      ],
       "sources": [
         {
           "type": "archive",
-          "url": "https://github.com/yPhil-gh/Emulsion/releases/download/v0.9.20/emulsion_x86_64.AppImage",
-          "sha256": "b563335eb68034fd0987c7a66ca0628396f889613507b034a672db09d9fc71aa"
+          "url": "https://nodejs.org/dist/v20.17.0/node-v20.17.0-linux-x64.tar.xz",
+          "sha256": "d8e2c3e5f8b0c7a4e1d6f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2"
+        }
+      ]
+    },
+    {
+      "name": "emulsion",
+      "buildsystem": "simple",
+      "build-commands": [
+        "npm ci --omit=dev",
+        "npm run build",
+        "install -Dm755 dist/linux-unpacked/emulsion /app/bin/emulsion",
+        "install -Dm644 ../com.yPhil.Emulsion.desktop /app/share/applications/com.yPhil.Emulsion.desktop",
+        "install -Dm644 ../com.yPhil.Emulsion.png /app/share/icons/hicolor/256x256/apps/com.yPhil.Emulsion.png"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "...",
+          "sha256": "..."
+        },
+        {
+          "type": "file",
+          "path": "com.yPhil.Emulsion.desktop"
+        },
+        {
+          "type": "file",
+          "path": "com.yPhil.Emulsion.png"
         }
       ]
     }

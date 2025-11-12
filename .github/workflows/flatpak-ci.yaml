@@ -10,40 +10,48 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: master  # ← Add this line
+          ref: master
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set variables
+      - name: Extract tag name
+        id: tag
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "RELEASE_URL=https://github.com/yPhil-gh/Emulsion/releases/download/v$TAG/emulsion_x86_64.AppImage" >> $GITHUB_ENV
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Download AppImage
-        run: curl -L -o emulsion.AppImage "$RELEASE_URL"
+      - name: Construct source archive URL
+        run: |
+          SOURCE_URL="https://github.com/yPhil-gh/Emulsion/archive/refs/tags/v${{ steps.tag.outputs.tag }}.tar.gz"
+          echo "SOURCE_URL=$SOURCE_URL" >> $GITHUB_ENV
+
+      - name: Download source archive
+        run: |
+          curl -L -o emulsion-source.tar.gz "$SOURCE_URL"
 
       - name: Compute SHA256
+        id: sha
         run: |
-          SHA256=$(sha256sum emulsion.AppImage | awk '{print $1}')
+          SHA256=$(sha256sum emulsion-source.tar.gz | awk '{print $1}')
           echo "SHA256=$SHA256" >> $GITHUB_ENV
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
 
-      - name: Update manifest JSON
+      - name: Update manifest with new URL and SHA256
         run: |
-          jq --arg url "$RELEASE_URL" --arg sha "$SHA256" \
-            '.modules[0].sources[0].url = $url | .modules[0].sources[0].sha256 = $sha' \
+          jq --arg url "$SOURCE_URL" --arg sha "${{ steps.sha.outputs.sha256 }}" \
+            '.modules[] | select(.name == "emulsion").sources[] | select(.type == "archive").url = $url | .sha256 = $sha' \
             com.yPhil.Emulsion.json > tmp.json
           mv tmp.json com.yPhil.Emulsion.json
 
-      - name: Configure git and push updated manifest
+      - name: Commit and push updated manifest
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add com.yPhil.Emulsion.json
-          git commit -m "Update manifest for $TAG" || echo "No changes to commit"
+          git commit -m "chore(flatpak): update manifest for v${{ steps.tag.outputs.tag }}" || echo "No changes to commit"
           git push origin master
