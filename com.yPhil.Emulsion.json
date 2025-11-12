@@ -13,21 +13,6 @@
   ],
   "modules": [
     {
-      "name": "nodejs",
-      "buildsystem": "simple",
-      "build-commands": [
-        "install -Dm755 node /app/bin/node",
-        "install -Dm755 npm  /app/bin/npm"
-      ],
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://nodejs.org/dist/v20.17.0/node-v20.17.0-linux-x64.tar.xz",
-          "sha256": "d8e2c3e5f8b0c7a4e1d6f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2"
-        }
-      ]
-    },
-    {
       "name": "emulsion",
       "buildsystem": "simple",
       "build-commands": [
@@ -40,8 +25,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "...",
-          "sha256": "..."
+          "url": "https://github.com/yPhil-gh/Emulsion/archive/refs/tags/v0.9.20.tar.gz",
+          "sha256": "df5f0ee6864622d8beed06841a897b8d9033b30cd8a6b00b5c921b2b793058e7"
         },
         {
           "type": "file",
