@@ -18,40 +18,53 @@ jobs:
           ref: master
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract tag name
+      - name: Extract tag
         id: tag
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          echo "TAG=$TAG" >> $GITHUB_ENV
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Construct source archive URL
+      - name: Build source URL
+        id: url
         run: |
-          SOURCE_URL="https://github.com/yPhil-gh/Emulsion/archive/refs/tags/v${{ steps.tag.outputs.tag }}.tar.gz"
-          echo "SOURCE_URL=$SOURCE_URL" >> $GITHUB_ENV
+          URL="https://github.com/yPhil-gh/Emulsion/archive/refs/tags/v${{ steps.tag.outputs.tag }}.tar.gz"
+          echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Download source archive
         run: |
-          curl -L -o emulsion-source.tar.gz "$SOURCE_URL"
+          curl -L -o source.tar.gz "${{ steps.url.outputs.url }}"
 
       - name: Compute SHA256
         id: sha
         run: |
-          SHA256=$(sha256sum emulsion-source.tar.gz | awk '{print $1}')
-          echo "SHA256=$SHA256" >> $GITHUB_ENV
-          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          SHA=$(sha256sum source.tar.gz | awk '{print $1}')
+          echo "sha256=$SHA" >> $GITHUB_OUTPUT
 
-      - name: Update manifest with new URL and SHA256
+      - name: Update manifest (preserve array!)
         run: |
-          jq --arg url "$SOURCE_URL" --arg sha "${{ steps.sha.outputs.sha256 }}" \
-            '.modules[] | select(.name == "emulsion").sources[] | select(.type == "archive").url = $url | .sha256 = $sha' \
-            com.yPhil.Emulsion.json > tmp.json
+          jq '
+            (.modules[] | select(.name == "emulsion").sources) as $sources
+            | .modules[] |= (
+                select(.name == "emulsion")
+                | .sources = (
+                  $sources
+                  | map(
+                    if .type == "archive" then
+                      .url = "${{ steps.url.outputs.url }}"
+                      | .sha256 = "${{ steps.sha.outputs.sha256 }}"
+                    else
+                      .
+                    end
+                  )
+                )
+              )
+          ' com.yPhil.Emulsion.json > tmp.json
           mv tmp.json com.yPhil.Emulsion.json
 
-      - name: Commit and push updated manifest
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add com.yPhil.Emulsion.json
-          git commit -m "chore(flatpak): update manifest for v${{ steps.tag.outputs.tag }}" || echo "No changes to commit"
+          git commit -m "chore(flatpak): update source archive for v${{ steps.tag.outputs.tag }}" || echo "No changes"
           git push origin master
