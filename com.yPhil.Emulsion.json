@@ -1,48 +1,35 @@
 {
   "app-id": "com.yPhil.Emulsion",
   "runtime": "org.freedesktop.Platform",
-  "runtime-version": "24.08",
+  "runtime-version": "23.08",
   "sdk": "org.freedesktop.Sdk",
-  "sdk-extensions": [
-    "org.freedesktop.Sdk.Extension.node20"
-  ],
   "command": "emulsion",
   "finish-args": [
-    "--share=ipc",
-    "--socket=x11",
     "--socket=wayland",
+    "--socket=fallback-x11",
+    "--share=network",
+    "--filesystem=home",
+    "--filesystem=host",
     "--device=dri",
-    "--filesystem=home"
+    "--talk-name=org.freedesktop.DBus",
+    "--talk-name=org.freedesktop.portal.Desktop"
   ],
   "modules": [
-    {
-      "name": "emulsion-deps",
-      "buildsystem": "simple",
-      "build-commands": [
-        "tar xf generated-sources.tar.xz"
-      ],
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://github.com/yPhil-gh/Emulsion/archive/refs/tags/v0.9.20.tar.gz",
-          "sha256": "df5f0ee6864622d8beed06841a897b8d9033b30cd8a6b00b5c921b2b793058e7"
-        },
-        {
-          "type": "archive",
-          "path": "generated-sources.tar.xz"
-        }
-      ]
-    },
     {
       "name": "emulsion",
       "buildsystem": "simple",
       "build-commands": [
-        "/usr/lib/sdk/node20/bin/npm run build",
-        "install -Dm755 dist/linux-unpacked/emulsion /app/bin/emulsion",
+        "cp -r linux-unpacked/* /app/",
+        "chmod +x /app/emulsion",
         "install -Dm644 ../com.yPhil.Emulsion.desktop /app/share/applications/com.yPhil.Emulsion.desktop",
-        "install -Dm644 ../com.yPhil.Emulsion.png /app/share/icons/hicolor/256x256/apps/com.yPhil.Emulsion.png"
+        "install -Dm644 ../com.yPhil.Emulsion.png /app/share/icons/hicolor/512x512/apps/com.yPhil.Emulsion.png"
       ],
       "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/yPhil-gh/Emulsion/releases/download/v0.9.28/linux-unpacked.tar.gz",
+          "sha256": ""
+        },
         {
           "type": "file",
           "path": "com.yPhil.Emulsion.desktop"
@@ -51,9 +38,6 @@
           "type": "file",
           "path": "com.yPhil.Emulsion.png"
         }
-      ],
-      "dependencies": [
-        "emulsion-deps"
       ]
     }
   ]
