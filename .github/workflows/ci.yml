@@ -1,0 +1,73 @@
+name: Update Flatpak Manifest
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract tag
+        id: tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build source archive URL
+        id: url
+        run: |
+          URL="https://github.com/yPhil-gh/Emulsion/archive/refs/tags/v${{ steps.tag.outputs.tag }}.tar.gz"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Download source archive
+        run: |
+          curl -L -o source.tar.gz "${{ steps.url.outputs.url }}"
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          SHA=$(sha256sum source.tar.gz | awk '{print $1}')
+          echo "sha256=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Update manifest (safe & atomic)
+        run: |
+          jq '
+            .modules |= map(
+              if .name == "emulsion" then
+                .sources |= map(
+                  if .type == "archive" then
+                    .url = "${{ steps.url.outputs.url }}"
+                    | .sha256 = "${{ steps.sha.outputs.sha256 }}"
+                  else .
+                  end
+                )
+              else .
+              end
+            )
+          ' com.yPhil.Emulsion.json > tmp.json \
+          && mv tmp.json com.yPhil.Emulsion.json
+
+      - name: Validate JSON
+        run: |
+          python3 -m json.tool com.yPhil.Emulsion.json > /dev/null \
+            || (echo "Invalid JSON after update" && exit 1)
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add com.yPhil.Emulsion.json
+          git commit -m "chore(flatpak): update source archive for v${{ steps.tag.outputs.tag }}" \
+            || echo "No changes to commit"
+          git push origin master
