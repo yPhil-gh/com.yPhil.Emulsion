@@ -31,8 +31,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "",
-          "sha256": ""
+          "url": "https://github.com/yPhil-gh/Emulsion/releases/download/0.9.28/linux-unpacked.tar.gz",
+          "sha256": "5963992a9b4f1026c9353e747376931283f07f93881c5f3246798acc40bd4d9c"
         },
         {
           "type": "file",
