@@ -12,31 +12,37 @@
     "--filesystem=host",
     "--device=dri",
     "--talk-name=org.freedesktop.DBus",
-    "--talk-name=org.freedesktop.portal.Desktop"
+    "--talk-name=org.freedesktop.portal.Desktop",
+    "--env=ELECTRON_DISABLE_SANDBOX=1"
   ],
   "modules": [
     {
       "name": "emulsion",
       "buildsystem": "simple",
       "build-commands": [
-        "cp -r linux-unpacked/* /app/",
-        "chmod +x /app/emulsion",
-        "install -Dm644 ../com.yPhil.Emulsion.desktop /app/share/applications/com.yPhil.Emulsion.desktop",
-        "install -Dm644 ../com.yPhil.Emulsion.png /app/share/icons/hicolor/512x512/apps/com.yPhil.Emulsion.png"
+        "cp -r . /app/",
+        "mkdir -p /app/bin",
+        "echo '#!/bin/sh' > /app/bin/emulsion",
+        "echo 'exec /app/emulsion --no-sandbox \"$@\"' >> /app/bin/emulsion",
+        "chmod +x /app/bin/emulsion /app/emulsion",
+        "install -Dm644 com.yPhil.Emulsion.desktop /app/share/applications/com.yPhil.Emulsion.desktop",
+        "install -Dm644 com.yPhil.Emulsion.png /app/share/icons/hicolor/512x512/apps/com.yPhil.Emulsion.png"
       ],
       "sources": [
         {
           "type": "archive",
-          "url": "https://github.com/yPhil-gh/Emulsion/releases/download/0.9.28/linux-unpacked.tar.gz",
-          "sha256": "5963992a9b4f1026c9353e747376931283f07f93881c5f3246798acc40bd4d9c"
+          "url": "",
+          "sha256": ""
         },
         {
           "type": "file",
-          "path": "com.yPhil.Emulsion.desktop"
+          "path": "com.yPhil.Emulsion.desktop",
+          "dest": "."
         },
         {
           "type": "file",
-          "path": "com.yPhil.Emulsion.png"
+          "path": "com.yPhil.Emulsion.png",
+          "dest": "."
         }
       ]
     }
