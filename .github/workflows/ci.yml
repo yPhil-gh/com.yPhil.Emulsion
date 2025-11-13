@@ -47,6 +47,10 @@ jobs:
             .modules[0].sources[0].sha256 = $sha
           ' com.yPhil.Emulsion.json > tmp.json && mv tmp.json com.yPhil.Emulsion.json
 
+      - name: Clean up downloaded archive
+        run: |
+          rm -f linux-unpacked.tar.gz
+
       - name: Validate JSON
         run: |
           python3 -m json.tool com.yPhil.Emulsion.json > /dev/null
